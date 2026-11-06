@@ -22,8 +22,8 @@ services:
       - "${OR_SSL_PORT:-443}:443"
       - "8883:8883"
       - "127.0.0.1:8404:8404" # Local metrics access
-      - "${PRIVATE_IP:-127.0.0.1}:8404:8404" # Allows to also expose metrics on a given IP address,
-        # intended to be IP of the interface of the private subnet of the EC2 VM
+      # Optional extra bind for EC2 private subnet metrics (set PRIVATE_IP to a non-loopback address)
+      # - "${PRIVATE_IP}:8404:8404"
     volumes:
       - proxy-data:/deployment
     environment:
@@ -50,7 +50,7 @@ services:
       - ./deployment:/deployment
     environment:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD:-secret}
-      KC_HOSTNAME: https://${OR_HOSTNAME:-localhost}/auth
+      KC_HOSTNAME: https://${OR_HOSTNAME:-127.0.0.1}/auth
 
   manager:
     #    privileged: true
@@ -61,8 +61,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8405:8405" # Local metrics access
-      - "${PRIVATE_IP:-127.0.0.1}:8405:8405" # Allows to also expose metrics on a given IP address,
-        # intended to be IP of the interface of the private subnet of the EC2 VM
+      # Optional extra bind for EC2 private subnet metrics (set PRIVATE_IP to a non-loopback address)
+      # - "${PRIVATE_IP}:8405:8405"
     environment:
       OR_SETUP_TYPE:
       OR_ADMIN_PASSWORD:
@@ -74,10 +74,11 @@ services:
       OR_EMAIL_FROM:
       OR_EMAIL_ADMIN:
       OR_METRICS_ENABLED: ${OR_METRICS_ENABLED:-true}
-      OR_HOSTNAME: ${OR_HOSTNAME:-localhost}
+      OR_HOSTNAME: ${OR_HOSTNAME:-127.0.0.1}
       OR_ADDITIONAL_HOSTNAMES:
       OR_SSL_PORT: ${OR_SSL_PORT:--1}
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
+      OR_MAP_SETTINGS_PATH: /deployment/map/mapsettings.json
 
       # Opt-in OpenTelemetry tracing to a local Alloy OTLP/HTTP receiver.
       OTEL_JAVAAGENT_ENABLED: ${OTEL_JAVAAGENT_ENABLED:-false}
@@ -96,3 +97,4 @@ services:
       OR_SETUP_IMPORT_DEMO_AGENT_VELBUS:
     volumes:
       - manager-data:/storage
+      - ./deployment:/deployment
